@@ -496,10 +496,10 @@ def validate_ecdl(
 def load_schema(schema_path: Path | None = None) -> dict[str, Any] | None:
     """Load ECDL JSON Schema."""
     if schema_path is None:
-        # Try to find bundled schema
+        # Try to find bundled schema (packaged alongside this module first)
         default_paths = [
+            Path(__file__).parent / "ecdl.schema.json",
             Path(__file__).parent.parent.parent.parent / "schemas" / "ecdl.schema.json",
-            Path(__file__).parent / "schema" / "ecdl-v1.0.0.schema.json",
             Path("ecdl-v1.0.0.schema.json"),
             Path("schema/ecdl-v1.0.0.schema.json"),
         ]
