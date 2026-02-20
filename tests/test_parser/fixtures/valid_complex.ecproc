@@ -1,0 +1,147 @@
+metadata:
+  protocol: Complex Multi-Phase Experiment
+  version: "2.3"
+  author: Dr. Smith
+  electrolyte: "0.1 M HClO4"
+  gas: N2
+  notes: Full-featured test fixture
+
+system:
+  electrodes: 3
+  reference: RHE
+  working:
+    material: Pt/C
+    area_cm2: 0.196
+    loading_ug_cm2: 20.0
+  electrolyte:
+    solute: HClO4
+    concentration_M: 0.1
+  counter: Pt mesh
+
+procedure:
+  - name: Setup Phase
+    setup:
+      gas: N2
+      rotation: 1600
+    stabilize:
+      - "OCP stable within 5 mV for 60 s"
+    steps:
+      - ocp:
+          for: 300 s
+      - eis:
+          frequency: 100 kHz to 0.1 Hz
+          amplitude: 10 mV
+          dc_bias: 0 V
+          tag: "setup_eis"
+          extract: Ru
+          vendor_flags:
+            biologic:
+              bandwidth: 5
+              drift_correction: true
+            gamry:
+              ac_settling: 3
+    teardown:
+      gas: off
+
+  - name: Stabilize Phase
+    setup:
+      gas: O2
+    steps:
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 50 mV/s
+          cycles: 50
+          tag: "conditioning_cv"
+
+  - name: Measurement Phase
+    steps:
+      - eis:
+          frequency: 100 kHz to 0.1 Hz
+          amplitude: 10 mV
+          dc_bias: 0 V
+          extract:
+            Ru: "high_frequency_intercept"
+            Rct: "semicircle_diameter"
+      - lsv:
+          from: 1.0 V
+          to: 0.2 V
+          rate: 5 mV/s
+          tag: "orr_lsv"
+
+  - name: Durability Phase
+    steps:
+      - loop:
+          count: 30000
+          steps:
+            - cv:
+                between: 0.6 V and 1.0 V
+                rate: 100 mV/s
+                cycles: 1
+          checkpoint:
+            trigger:
+              any:
+                - every: 5000 cycles
+                - every: 24 h
+            do:
+              - eis:
+                  frequency: 100 kHz to 0.1 Hz
+                  amplitude: 10 mV
+                  dc_bias: 0 V
+                  extract: Ru
+              - cv:
+                  between: 0.05 V and 1.2 V
+                  rate: 50 mV/s
+                  cycles: 3
+                  tag: "checkpoint_cv"
+
+  - name: Endurance Phase
+    steps:
+      - loop:
+          count: "{total_cycles}"
+          steps:
+            - cv:
+                between: 0.6 V and 1.0 V
+                rate: 100 mV/s
+                cycles: 1
+          stop_if: "ECSA_loss > 40%"
+
+state_recovery:
+  after_pause:
+    - ocp:
+        for: 60 s
+  after_checkpoint:
+    - ocp:
+        for: 30 s
+    - eis:
+        frequency: 100 kHz to 0.1 Hz
+        amplitude: 10 mV
+        dc_bias: 0 V
+  after_error:
+    - "log_error"
+    - ocp:
+        for: 10 s
+
+output:
+  ecdl:
+    include_raw: true
+    compress: gzip
+    signing: sha256
+
+safety:
+  max_current: "200 mA"
+  voltage_window:
+    - "-0.5 V"
+    - "2.0 V"
+  temperature_limits:
+    - "15 C"
+    - "40 C"
+  stop_if:
+    - "current > 500 mA"
+    - "temperature > 45 C"
+  thermal_runaway:
+    max_dT_dt: 5.0
+    action: emergency_stop
+  reference_electrode_monitor:
+    max_Ru_change: "10x"
+    max_ocp_drift: "500 mV/s"
+    action: cell_off

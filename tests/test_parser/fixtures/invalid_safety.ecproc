@@ -1,0 +1,21 @@
+# Potential outside safety voltage window
+metadata:
+  protocol: Unsafe Potential Test
+  version: "1.0"
+
+system:
+  electrodes: 3
+  reference: RHE
+
+procedure:
+  - name: Unsafe Phase
+    steps:
+      - cv:
+          between: -1.0 V and 3.0 V
+          rate: 50 mV/s
+          cycles: 5
+
+safety:
+  voltage_window:
+    - "-0.5 V"
+    - "2.0 V"

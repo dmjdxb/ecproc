@@ -1,0 +1,14 @@
+{
+  "hardware_id": "biologic_sp300",
+  "manufacturer": "BioLogic",
+  "model": "SP-300",
+  "capabilities": {
+    "max_current_a": 0.8,
+    "min_current_a": 1e-12,
+    "max_potential_v": 10.0,
+    "min_potential_v": -10.0,
+    "eis": {"frequency_range_hz": [1e-5, 7e6], "max_amplitude_v": 0.5},
+    "techniques": ["ocp", "cv", "lsv", "ca", "cp", "eis", "dpv", "swv", "gcd", "cc"],
+    "features": ["ir_compensation", "autoranging", "multi_channel"]
+  }
+}

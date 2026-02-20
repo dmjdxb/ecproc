@@ -1,0 +1,1739 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecdl.electrocatalystai.com/schema/v1.0.0/ecdl.json",
+  "title": "ECDL - Electrochemical Description Language",
+  "description": "A standardized schema for encoding electrocatalyst durability test protocols, observations, and computed metrics. Developed by ElectrocatalystAI for protocol-aware durability benchmarking.",
+  "type": "object",
+  "required": ["ecdl_version", "protocol", "material"],
+  "additionalProperties": false,
+
+  "$defs": {
+    "ElectrolyteType": {
+      "type": "string",
+      "enum": [
+        "H2SO4",
+        "HClO4", 
+        "HCl",
+        "HNO3",
+        "H3PO4",
+        "KOH",
+        "NaOH",
+        "LiOH",
+        "PBS",
+        "KHCO3",
+        "NaHCO3",
+        "K2CO3",
+        "Na2CO3",
+        "KCl",
+        "NaCl",
+        "NAFION",
+        "PEM",
+        "AEM",
+        "AQUIVION",
+        "PBI",
+        "SELEMION",
+        "SOLID_OXIDE",
+        "IONIC_LIQUID",
+        "MIXED",
+        "OTHER",
+        "UNKNOWN"
+      ],
+      "description": "Standardized electrolyte type identifiers"
+    },
+
+    "TestFormat": {
+      "type": "string",
+      "enum": [
+        "RDE",
+        "RRDE",
+        "MEA",
+        "PEMWE_MEA",
+        "AEMWE_MEA",
+        "PEMFC_MEA",
+        "FLOW_CELL",
+        "GDE_HALF_CELL",
+        "HALF_CELL",
+        "FULL_CELL",
+        "THREE_ELECTRODE",
+        "TWO_ELECTRODE",
+        "SINGLE_CELL",
+        "STACK",
+        "MICROELECTRODE",
+        "SCANNING_ELECTROCHEMICAL",
+        "OTHER",
+        "UNKNOWN"
+      ],
+      "description": "Electrochemical test apparatus format"
+    },
+
+    "ReferenceElectrode": {
+      "type": "string",
+      "enum": [
+        "RHE",
+        "SHE",
+        "NHE",
+        "SCE",
+        "Ag/AgCl",
+        "Hg/HgO",
+        "Hg/Hg2SO4",
+        "OTHER",
+        "UNKNOWN"
+      ],
+      "description": "Reference electrode type for potential measurements"
+    },
+
+    "Regime": {
+      "type": "string",
+      "enum": ["acidic", "alkaline", "neutral", "unknown"],
+      "description": "Electrochemical regime derived from pH or electrolyte"
+    },
+
+    "MetricType": {
+      "type": "string",
+      "enum": [
+        "tau20_activity",
+        "tau20_mass",
+        "tau10_activity",
+        "tau10_mass",
+        "tau50_activity",
+        "tau50_mass",
+        "s_number",
+        "stability_number",
+        "activity_stability_factor",
+        "retention_percent",
+        "ecsa_retention_percent",
+        "mass_activity_retention_percent",
+        "specific_activity_retention_percent",
+        "dissolution_rate",
+        "dissolution_rate_per_cycle",
+        "current_density_loss",
+        "overpotential_increase",
+        "cell_voltage_increase",
+        "degradation_rate_uV_h",
+        "degradation_rate_percent_h",
+        "degradation_rate_mV_kh",
+        "faradaic_efficiency",
+        "tafel_slope_change",
+        "particle_growth_factor",
+        "metal_loading_loss",
+        "hfr_increase",
+        "hfr_increase_percent",
+        "hydrogen_crossover",
+        "exchange_current_density",
+        "charge_transfer_resistance",
+        "double_layer_capacitance",
+        "cv_peak_current_retention",
+        "product_gas_purity",
+        "OTHER"
+      ],
+      "description": "Type of durability metric reported"
+    },
+
+    "ExtractionMethod": {
+      "type": "string",
+      "enum": [
+        "NER_TRANSFORMER",
+        "NER_REGEX",
+        "TABLE_EXTRACTION",
+        "MANUAL",
+        "INFERRED",
+        "DEFAULT"
+      ],
+      "description": "Method used to extract this value from source"
+    },
+
+    "ConfidenceTier": {
+      "type": "string",
+      "enum": ["A", "B", "C"],
+      "description": "Confidence tier: A=reliable, B=marginal, C=extrapolation-heavy"
+    },
+
+    "Recommendation": {
+      "type": "string",
+      "enum": [
+        "include",
+        "include_with_caution",
+        "supplementary_only",
+        "exclude"
+      ],
+      "description": "Usage recommendation for this datapoint"
+    },
+
+    "NullableFloat": {
+      "oneOf": [
+        { "type": "number" },
+        { "type": "null" }
+      ]
+    },
+
+    "NullablePositiveFloat": {
+      "oneOf": [
+        { "type": "number", "minimum": 0 },
+        { "type": "null" }
+      ]
+    },
+
+    "NullablePositiveInt": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "null" }
+      ]
+    },
+
+    "ExtractedValue": {
+      "type": "object",
+      "description": "A value with extraction provenance",
+      "properties": {
+        "value": {},
+        "source": { "$ref": "#/$defs/ExtractionMethod" },
+        "confidence": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 1,
+          "description": "Extraction confidence score"
+        },
+        "source_span": {
+          "type": "string",
+          "description": "Original text span from which value was extracted"
+        }
+      },
+      "required": ["value"]
+    },
+
+    "Electrolyte": {
+      "type": "object",
+      "description": "Electrolyte specification",
+      "properties": {
+        "type": { "$ref": "#/$defs/ElectrolyteType" },
+        "formula": {
+          "type": "string",
+          "description": "Chemical formula if not a standard type (e.g., '0.5M H2SO4 + 0.1M HClO4')"
+        },
+        "concentration_M": { "$ref": "#/$defs/NullablePositiveFloat" },
+        "concentration_unit": {
+          "type": "string",
+          "enum": ["M", "mM", "wt%", "vol%"],
+          "default": "M"
+        }
+      }
+    },
+
+    "Potential": {
+      "type": "object",
+      "description": "Applied potential specification",
+      "properties": {
+        "high_V": { 
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Maximum potential applied during test (V vs reference)"
+        },
+        "low_V": { 
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Minimum potential applied during test (V vs reference)"
+        },
+        "reference": { 
+          "$ref": "#/$defs/ReferenceElectrode",
+          "default": "RHE"
+        },
+        "scan_rate_mV_s": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Potential scan rate for cyclic methods (mV/s)"
+        }
+      }
+    },
+
+    "Protocol": {
+      "type": "object",
+      "description": "Complete experimental protocol specification",
+      "additionalProperties": false,
+      "properties": {
+        "electrolyte": { "$ref": "#/$defs/Electrolyte" },
+        "ph": { 
+          "$ref": "#/$defs/NullableFloat",
+          "minimum": 0,
+          "maximum": 14,
+          "description": "Solution pH. null = unknown, NOT 7.0"
+        },
+        "regime": { 
+          "$ref": "#/$defs/Regime",
+          "description": "Derived from pH or electrolyte type"
+        },
+        "temperature_C": { 
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Test temperature in Celsius. null = unknown, NOT 25"
+        },
+        "potential": { "$ref": "#/$defs/Potential" },
+        "current_density_mA_cm2": { 
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Applied current density (mA/cm² geometric)"
+        },
+        "control_mode": {
+          "type": "string",
+          "enum": ["potentiostatic", "galvanostatic", "potentiodynamic", "galvanodynamic", "OCV", "hybrid", "other", "unknown"],
+          "description": "Electrochemical control mode"
+        },
+        "waveform": {
+          "type": "string",
+          "enum": ["constant_hold", "triangle_cv", "square_wave", "staircase", "linear_sweep", "pulse", "AST_square", "AST_triangle", "other", "unknown"],
+          "description": "Potential/current waveform type"
+        },
+        "ir_compensation": {
+          "type": "boolean",
+          "description": "Whether iR compensation was applied"
+        },
+        "ir_compensation_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Percentage of solution resistance compensated (typically 80-95%)"
+        },
+        "uncompensated_resistance_ohm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Measured uncompensated resistance in ohms"
+        },
+        "test_format": { "$ref": "#/$defs/TestFormat" },
+        "rotation_rpm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electrode rotation rate for RDE/RRDE (rpm)"
+        },
+        "duration_hours": { 
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Test duration in hours. NOT used in hazard calculation."
+        },
+        "cycle_count": { 
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Number of cycles for cyclic tests. NOT used in hazard calculation."
+        },
+        "loading_mg_cm2": { 
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Catalyst loading (mg/cm² geometric)"
+        },
+        "geometric_area_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Geometric electrode area (cm²)"
+        },
+        "working_electrode_substrate": {
+          "type": "string",
+          "description": "Working electrode substrate material (e.g., 'GC', 'Ti', 'Au', 'carbon paper', 'Ti felt', 'FTO')"
+        },
+        "counter_electrode": {
+          "type": "string",
+          "description": "Counter electrode material (e.g., 'Pt wire', 'Pt mesh', 'graphite rod', 'carbon cloth')"
+        },
+        "reference_electrode_type": {
+          "$ref": "#/$defs/ReferenceElectrode",
+          "description": "Reference electrode used in measurement"
+        },
+        "cell_configuration": {
+          "type": "string",
+          "enum": ["three_electrode", "two_electrode", "four_electrode", "unknown"],
+          "description": "Electrochemical cell configuration"
+        },
+        "gas_atmosphere": {
+          "type": "string",
+          "description": "Gas environment at working electrode (e.g., 'O2', 'N2', 'Ar', 'air', 'H2')"
+        },
+        "gas_saturation": {
+          "type": "boolean",
+          "description": "Whether electrolyte was saturated/purged with gas"
+        },
+        "gas_flow_rate_mL_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Gas flow rate in mL/min"
+        },
+        "purge_gas": {
+          "type": "string",
+          "description": "Purge/saturation gas before measurement"
+        },
+        "purge_duration_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Duration of gas purge in minutes"
+        },
+        "electrolyte_volume_mL": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electrolyte volume in mL"
+        },
+        "electrolyte_flow_rate_mL_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electrolyte flow rate for flow cells (mL/min)"
+        },
+        "membrane_type": {
+          "type": "string",
+          "description": "Membrane/separator type for MEA (e.g., 'Nafion 115', 'Nafion 117', 'Nafion 212', 'Aquivion', 'PBI')"
+        },
+        "membrane_thickness_um": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Membrane thickness in micrometers"
+        },
+        "ionomer_content_wt_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Ionomer content in catalyst layer (wt%)"
+        },
+        "ionomer_type": {
+          "type": "string",
+          "description": "Ionomer type in catalyst layer (e.g., 'Nafion', 'Aquivion')"
+        },
+        "humidity_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Relative humidity for MEA tests (%)"
+        },
+        "anode_humidity_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Anode-side relative humidity (%)"
+        },
+        "cathode_humidity_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Cathode-side relative humidity (%)"
+        },
+        "pressure_bar": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Cell/system pressure in bar (absolute)"
+        },
+        "differential_pressure_bar": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Pressure differential across membrane (bar)"
+        },
+        "break_in_protocol": {
+          "type": "string",
+          "description": "Pre-test conditioning/break-in protocol description"
+        },
+        "break_in_duration_hours": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Duration of break-in/conditioning in hours"
+        },
+        "ast_protocol_name": {
+          "type": "string",
+          "description": "Standard AST protocol name (e.g., 'DOE 2020', 'EU FCH JU', 'JRC', 'custom')"
+        },
+        "ast_protocol_reference": {
+          "type": "string",
+          "description": "Reference/DOI for AST protocol specification"
+        },
+        "cell_type": {
+          "type": "string",
+          "description": "Specific cell type (e.g., 'H-cell', 'single cell', 'differential cell', 'GDE half-cell')"
+        },
+        "active_area_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Active area for MEA/full cell (cm²)"
+        },
+        "catalyst_coated_membrane": {
+          "type": "boolean",
+          "description": "Whether CCM (catalyst coated membrane) or GDE configuration"
+        },
+        "hot_pressing_conditions": {
+          "type": "string",
+          "description": "MEA hot pressing conditions (temp, pressure, time)"
+        },
+        "gdl_type": {
+          "type": "string",
+          "description": "Gas diffusion layer type (e.g., 'Sigracet 29BC', 'Toray TGP-H-060')"
+        },
+        "bipolar_plate_material": {
+          "type": "string",
+          "description": "Bipolar plate material (e.g., 'graphite', 'Ti', 'stainless steel')"
+        },
+        "flow_field_type": {
+          "type": "string",
+          "enum": ["serpentine", "parallel", "interdigitated", "pin", "other", "unknown"],
+          "description": "Flow field pattern type"
+        },
+        "water_resistivity_MOhm_cm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Ultrapure water resistivity (MΩ·cm), typically 18.2 for Milli-Q"
+        },
+        "water_source": {
+          "type": "string",
+          "description": "Water purification system (e.g., 'Milli-Q', 'Barnstead', 'in-house DI')"
+        },
+        "n_replicates": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Number of independent replicate measurements"
+        },
+        "n_electrodes_tested": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Number of separate electrodes tested"
+        },
+        "equilibration_time_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Equilibration time before measurement (minutes)"
+        },
+        "ocv_stabilization_criteria": {
+          "type": "string",
+          "description": "OCV stabilization criteria (e.g., '<1mV/min for 10 min')"
+        },
+        "conditioning_cycles": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Number of conditioning CV cycles before measurement"
+        },
+        "conditioning_scan_rate_mV_s": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Scan rate for conditioning cycles (mV/s)"
+        },
+        "conditioning_potential_range_V": {
+          "type": "object",
+          "properties": {
+            "low_V": { "$ref": "#/$defs/NullableFloat" },
+            "high_V": { "$ref": "#/$defs/NullableFloat" }
+          },
+          "description": "Potential range for conditioning cycles"
+        },
+        "data_acquisition_rate_Hz": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Data acquisition rate (Hz)"
+        },
+        "potentiostat_manufacturer": {
+          "type": "string",
+          "description": "Potentiostat/galvanostat manufacturer (e.g., 'Biologic', 'Gamry', 'Autolab')"
+        },
+        "potentiostat_model": {
+          "type": "string",
+          "description": "Potentiostat/galvanostat model (e.g., 'VSP-300', 'Reference 3000')"
+        },
+        "cell_hardware_manufacturer": {
+          "type": "string",
+          "description": "Electrochemical cell manufacturer"
+        },
+        "cell_hardware_model": {
+          "type": "string",
+          "description": "Electrochemical cell model/part number"
+        },
+        "reference_electrode_calibration": {
+          "type": "string",
+          "description": "Reference electrode calibration method/date"
+        },
+        "reference_electrode_potential_vs_rhe_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Measured reference electrode potential vs RHE (mV)"
+        },
+        "stirring_rate_rpm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Magnetic stirring rate (rpm) for non-RDE cells"
+        },
+        "temperature_control_method": {
+          "type": "string",
+          "enum": ["water_bath", "heating_jacket", "peltier", "oven", "ambient", "other", "unknown"],
+          "description": "Temperature control method"
+        },
+        "electrode_polishing_protocol": {
+          "type": "string",
+          "description": "Electrode polishing protocol (e.g., '0.05 µm alumina, sonicate 5 min')"
+        },
+        "ink_preparation": {
+          "type": "string",
+          "description": "Catalyst ink preparation method"
+        },
+        "ink_solvent": {
+          "type": "string",
+          "description": "Ink solvent composition (e.g., 'IPA:H2O 1:4 + 0.05% Nafion')"
+        },
+        "deposition_method": {
+          "type": "string",
+          "enum": ["drop_cast", "spin_coat", "spray_coat", "doctor_blade", "screen_print", "decal_transfer", "other", "unknown"],
+          "description": "Catalyst deposition method"
+        },
+        "drying_protocol": {
+          "type": "string",
+          "description": "Electrode drying protocol after deposition"
+        },
+        "eis_performed": {
+          "type": "boolean",
+          "description": "Whether EIS was performed"
+        },
+        "eis_frequency_range_Hz": {
+          "type": "object",
+          "properties": {
+            "min_Hz": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "max_Hz": { "$ref": "#/$defs/NullablePositiveFloat" }
+          },
+          "description": "EIS frequency range"
+        },
+        "eis_amplitude_mV": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "EIS AC amplitude (mV)"
+        },
+        "eis_dc_potential_V": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "EIS DC potential vs reference (V)"
+        },
+        "cv_for_ecsa_scan_rate_mV_s": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "CV scan rate for ECSA measurement (mV/s)"
+        },
+        "cv_for_ecsa_potential_range_V": {
+          "type": "object",
+          "properties": {
+            "low_V": { "$ref": "#/$defs/NullableFloat" },
+            "high_V": { "$ref": "#/$defs/NullableFloat" }
+          },
+          "description": "CV potential range for ECSA measurement"
+        },
+        "hfr_measurement_frequency_kHz": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Frequency for HFR measurement (kHz), typically 1-10 kHz"
+        },
+        "online_icp_ms_used": {
+          "type": "boolean",
+          "description": "Whether online/in-situ ICP-MS was used for dissolution monitoring"
+        },
+        "icp_ms_instrument": {
+          "type": "string",
+          "description": "ICP-MS instrument model"
+        },
+        "icp_ms_detection_limit_ppt": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "ICP-MS detection limit (ppt)"
+        },
+        "icp_ms_flow_rate_mL_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electrolyte flow rate through ICP-MS (mL/min)"
+        },
+        "icp_ms_sampling_interval_s": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "ICP-MS data acquisition interval (seconds)"
+        },
+        "online_gc_used": {
+          "type": "boolean",
+          "description": "Whether online gas chromatography was used"
+        },
+        "gc_instrument": {
+          "type": "string",
+          "description": "GC instrument model"
+        },
+        "gc_detector_type": {
+          "type": "string",
+          "enum": ["TCD", "FID", "MS", "BID", "other"],
+          "description": "GC detector type"
+        },
+        "gc_sampling_interval_min": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "GC sampling interval (minutes)"
+        },
+        "online_ms_used": {
+          "type": "boolean",
+          "description": "Whether online mass spectrometry (DEMS/OLEMS) was used"
+        },
+        "ms_technique": {
+          "type": "string",
+          "enum": ["DEMS", "OLEMS", "RRDE-MS", "other"],
+          "description": "Online MS technique"
+        },
+        "product_quantification_method": {
+          "type": "string",
+          "description": "Method for quantifying reaction products"
+        },
+        "reference_electrode_storage": {
+          "type": "string",
+          "description": "Reference electrode storage solution/conditions"
+        },
+        "reference_electrode_age_days": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Age of reference electrode (days)"
+        },
+        "reference_electrode_verification": {
+          "type": "string",
+          "description": "How reference electrode was verified (e.g., 'vs fresh RHE')"
+        },
+        "temperature_measurement_location": {
+          "type": "string",
+          "enum": ["electrolyte", "cell_body", "electrode", "external_bath", "other"],
+          "description": "Where temperature was measured"
+        },
+        "temperature_stability_C": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Temperature stability/variation during test (±°C)"
+        }
+      }
+    },
+
+    "Material": {
+      "type": "object",
+      "description": "Catalyst material specification",
+      "required": ["formula_raw"],
+      "properties": {
+        "formula_raw": {
+          "type": "string",
+          "description": "Original formula as reported in paper"
+        },
+        "formula_canonical": {
+          "type": "string",
+          "description": "Normalized canonical formula (e.g., 'IrO2' not 'IrOx')"
+        },
+        "composition": {
+          "type": "object",
+          "description": "Elemental composition as atom fractions",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 },
+          "examples": [{ "Ir": 0.33, "O": 0.67 }]
+        },
+        "oxidation_state": {
+          "type": "string",
+          "description": "Metal oxidation state (e.g., 'Ir(IV)', 'mixed III/IV', 'metallic')"
+        },
+        "phase": {
+          "type": "string",
+          "enum": ["rutile", "hollandite", "pyrochlore", "perovskite", "spinel", "amorphous", "mixed", "other", "unknown"],
+          "description": "Crystal phase/structure type"
+        },
+        "support": {
+          "type": "string",
+          "description": "Support material if applicable (e.g., 'C', 'TiO2', 'Ti felt', 'Nb:TiO2')"
+        },
+        "support_loading_wt_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Metal loading on support (wt%), e.g., 20 for 20% Ir/C"
+        },
+        "morphology": {
+          "type": "string",
+          "enum": ["nanoparticle", "nanowire", "nanorod", "nanotube", "nanosheet", "core-shell", "film", "foam", "aerogel", "single_atom", "cluster", "bulk", "other", "unknown"],
+          "description": "Particle/catalyst morphology"
+        },
+        "facet_exposure": {
+          "type": "string",
+          "description": "Dominant exposed crystal facets (e.g., '(110)', '(100)', '(111)')"
+        },
+        "crystallinity": {
+          "type": "string",
+          "enum": ["amorphous", "crystalline", "partially_crystalline", "mixed", "unknown"],
+          "description": "Degree of crystallinity"
+        },
+        "defect_density": {
+          "type": "string",
+          "enum": ["low", "moderate", "high", "unknown"],
+          "description": "Qualitative defect/vacancy density"
+        },
+        "oxygen_vacancy_concentration": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Oxygen vacancy concentration if quantified (e.g., from XPS)"
+        },
+        "synthesis_method": {
+          "type": "string",
+          "description": "Synthesis route (e.g., 'hydrothermal', 'Adams fusion', 'ALD', 'electrodeposition', 'sol-gel', 'flame spray')"
+        },
+        "calcination_temp_C": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Calcination/annealing temperature in Celsius"
+        },
+        "calcination_duration_hours": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Calcination/annealing duration in hours"
+        },
+        "calcination_atmosphere": {
+          "type": "string",
+          "description": "Calcination atmosphere (e.g., 'air', 'O2', 'N2', 'Ar', 'H2/Ar')"
+        },
+        "particle_size_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Average/mean particle size in nanometers"
+        },
+        "particle_size_distribution": {
+          "type": "object",
+          "description": "Particle size distribution statistics",
+          "properties": {
+            "mean_nm": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "median_nm": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "std_nm": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "d10_nm": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "d50_nm": { "$ref": "#/$defs/NullablePositiveFloat" },
+            "d90_nm": { "$ref": "#/$defs/NullablePositiveFloat" }
+          }
+        },
+        "bet_surface_area_m2_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "BET surface area (m²/g)"
+        },
+        "ecsa_m2_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electrochemically active surface area (m²/g metal)"
+        },
+        "ecsa_method": {
+          "type": "string",
+          "enum": ["Hupd", "CO_stripping", "Cu_upd", "double_layer_capacitance", "other", "unknown"],
+          "description": "Method used to determine ECSA"
+        },
+        "roughness_factor": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "ECSA / geometric area ratio"
+        },
+        "dopant_elements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of dopant elements (e.g., ['Ce', 'Zr'])"
+        },
+        "dopant_fractions": {
+          "type": "object",
+          "description": "Dopant atom fractions",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 },
+          "examples": [{ "Ce": 0.1, "Zr": 0.05 }]
+        },
+        "coating_shell": {
+          "type": "string",
+          "description": "Shell material for core-shell structures"
+        },
+        "coating_thickness_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Shell/coating thickness in nanometers"
+        },
+        "supplier": {
+          "type": "string",
+          "description": "Material supplier/vendor (e.g., 'Alfa Aesar', 'Sigma-Aldrich', 'in-house')"
+        },
+        "supplier_product_number": {
+          "type": "string",
+          "description": "Supplier catalog/product number"
+        },
+        "batch_lot_number": {
+          "type": "string",
+          "description": "Batch or lot number for traceability"
+        },
+        "purity_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Material purity (%), e.g., 99.9"
+        },
+        "impurities": {
+          "type": "object",
+          "description": "Known impurities and their concentrations (ppm)",
+          "additionalProperties": { "type": "number" },
+          "examples": [{ "Fe": 50, "Ni": 20 }]
+        },
+        "xrd_crystallite_size_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Crystallite size from XRD Scherrer analysis (nm)"
+        },
+        "lattice_parameter_a_angstrom": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Lattice parameter a (Å)"
+        },
+        "lattice_parameter_c_angstrom": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Lattice parameter c (Å) for tetragonal/hexagonal"
+        },
+        "lattice_strain_percent": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Lattice strain from XRD (%), positive = tensile"
+        },
+        "metal_dispersion_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Metal dispersion for supported catalysts (%)"
+        },
+        "coordination_number": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Average coordination number from EXAFS"
+        },
+        "metal_oxygen_bond_length_angstrom": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Metal-oxygen bond length from EXAFS (Å)"
+        },
+        "xps_binding_energy_eV": {
+          "type": "object",
+          "description": "XPS binding energies for key peaks (eV)",
+          "additionalProperties": { "type": "number" },
+          "examples": [{ "Ir4f7/2": 61.8, "O1s": 530.2 }]
+        },
+        "pre_treatment_protocol": {
+          "type": "string",
+          "description": "Pre-treatment/activation protocol before testing"
+        },
+        "pre_treatment_temperature_C": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Pre-treatment temperature (°C)"
+        },
+        "pre_treatment_atmosphere": {
+          "type": "string",
+          "description": "Pre-treatment atmosphere (e.g., 'H2/Ar', 'O2', 'vacuum')"
+        },
+        "storage_conditions": {
+          "type": "string",
+          "description": "Storage conditions (e.g., 'ambient', 'N2 glovebox', 'desiccator')"
+        },
+        "age_days_since_synthesis": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Days between synthesis and testing"
+        },
+        "raman_d_band_cm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Raman D-band position (cm⁻¹) for carbon-based materials"
+        },
+        "raman_g_band_cm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Raman G-band position (cm⁻¹) for carbon-based materials"
+        },
+        "raman_id_ig_ratio": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Raman I_D/I_G ratio (defect density indicator)"
+        },
+        "raman_2d_band_cm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Raman 2D-band position (cm⁻¹)"
+        },
+        "raman_metal_oxide_peaks": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Characteristic Raman peaks for metal oxide (cm⁻¹)"
+        },
+        "tpr_peak_temperatures_C": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Temperature-programmed reduction peak temperatures (°C)"
+        },
+        "tpr_h2_consumption_mmol_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Total H2 consumption from TPR (mmol/g)"
+        },
+        "tpd_o2_desorption_umol_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "O2 desorption from TPD (µmol/g)"
+        },
+        "contact_angle_deg": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Water contact angle (degrees) - wettability"
+        },
+        "contact_angle_electrolyte_deg": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Contact angle with electrolyte (degrees)"
+        },
+        "pore_volume_cm3_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Total pore volume (cm³/g)"
+        },
+        "micropore_volume_cm3_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Micropore volume < 2nm (cm³/g)"
+        },
+        "mesopore_volume_cm3_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Mesopore volume 2-50nm (cm³/g)"
+        },
+        "average_pore_diameter_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Average pore diameter (nm)"
+        },
+        "pore_size_distribution_method": {
+          "type": "string",
+          "enum": ["BJH", "DFT", "HK", "other", "unknown"],
+          "description": "Method used for pore size distribution"
+        },
+        "zeta_potential_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Zeta potential in suspension (mV)"
+        },
+        "zeta_potential_ph": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "pH at which zeta potential was measured"
+        },
+        "isoelectric_point_ph": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Isoelectric point (pH where zeta = 0)"
+        },
+        "conductivity_S_cm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Electronic conductivity (S/cm)"
+        },
+        "bandgap_eV": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Optical bandgap from UV-Vis (eV)"
+        },
+        "tga_decomposition_temp_C": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Decomposition temperature from TGA (°C)"
+        },
+        "tga_residual_mass_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Residual mass after TGA (%)"
+        }
+      }
+    },
+
+    "Observation": {
+      "type": "object",
+      "description": "Durability measurement observation",
+      "required": ["metric_type", "value"],
+      "properties": {
+        "metric_type": { "$ref": "#/$defs/MetricType" },
+        "value": { 
+          "type": "number",
+          "description": "Observed value"
+        },
+        "unit": { 
+          "type": "string",
+          "description": "Unit of measurement"
+        },
+        "uncertainty": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Measurement uncertainty (same units as value)"
+        },
+        "threshold_percent": {
+          "type": "number",
+          "description": "Threshold used for tau calculation (e.g., 20 for tau20)"
+        },
+        "retention_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final retention percentage at end of test"
+        },
+        "initial_value": {
+          "type": "number",
+          "description": "Initial value before degradation"
+        },
+        "final_value": {
+          "type": "number",
+          "description": "Final value after test"
+        },
+        "degradation_mode": {
+          "type": "string",
+          "enum": ["activity_loss", "dissolution", "passivation", "agglomeration", "detachment", "corrosion", "mixed", "unknown"],
+          "description": "Primary degradation mechanism observed"
+        },
+        "degradation_modes_observed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["activity_loss", "dissolution", "passivation", "agglomeration", "detachment", "corrosion", "carbon_corrosion", "membrane_degradation", "catalyst_migration", "unknown"]
+          },
+          "description": "All degradation modes observed"
+        },
+        "ecsa_initial_m2_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial ECSA before test (m²/g)"
+        },
+        "ecsa_final_m2_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final ECSA after test (m²/g)"
+        },
+        "ecsa_retention_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "ECSA retention percentage"
+        },
+        "overpotential_initial_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Initial overpotential at reference current (mV)"
+        },
+        "overpotential_final_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Final overpotential at reference current (mV)"
+        },
+        "overpotential_increase_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Increase in overpotential during test (mV)"
+        },
+        "overpotential_reference_current_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Current density at which overpotential was measured"
+        },
+        "mass_activity_initial_A_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial mass activity (A/g metal)"
+        },
+        "mass_activity_final_A_g": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final mass activity (A/g metal)"
+        },
+        "mass_activity_retention_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Mass activity retention percentage"
+        },
+        "specific_activity_initial_mA_cm2_ecsa": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial specific activity (mA/cm² ECSA)"
+        },
+        "specific_activity_final_mA_cm2_ecsa": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final specific activity (mA/cm² ECSA)"
+        },
+        "specific_activity_retention_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Specific activity retention percentage"
+        },
+        "tafel_slope_initial_mV_dec": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial Tafel slope (mV/decade)"
+        },
+        "tafel_slope_final_mV_dec": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final Tafel slope (mV/decade)"
+        },
+        "tafel_slope_change_mV_dec": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Change in Tafel slope (mV/decade)"
+        },
+        "dissolution_rate_ng_cm2_s": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Dissolution rate (ng/cm²/s)"
+        },
+        "dissolution_rate_pg_cm2_cycle": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Dissolution rate per cycle (pg/cm²/cycle)"
+        },
+        "total_dissolved_mass_ug_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Total dissolved metal mass (µg/cm²)"
+        },
+        "metal_loading_loss_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Percentage of metal loading lost to dissolution"
+        },
+        "faradaic_efficiency_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Faradaic efficiency for target reaction (%)"
+        },
+        "faradaic_efficiency_initial_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial faradaic efficiency (%)"
+        },
+        "faradaic_efficiency_final_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final faradaic efficiency (%)"
+        },
+        "charge_passed_C_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Total charge passed during test (C/cm²)"
+        },
+        "energy_efficiency_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Energy efficiency for full cell tests (%)"
+        },
+        "cell_voltage_initial_V": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial cell voltage for full cell (V)"
+        },
+        "cell_voltage_final_V": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final cell voltage for full cell (V)"
+        },
+        "cell_voltage_increase_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Cell voltage increase during test (mV)"
+        },
+        "degradation_rate_uV_h": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Voltage degradation rate (µV/h)"
+        },
+        "degradation_rate_percent_h": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "Percentage degradation rate (%/h)"
+        },
+        "particle_size_initial_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial particle size from post-mortem (nm)"
+        },
+        "particle_size_final_nm": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final particle size from post-mortem (nm)"
+        },
+        "particle_growth_factor": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Ratio of final to initial particle size"
+        },
+        "post_mortem_techniques": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Post-mortem characterization techniques used (e.g., ['TEM', 'XPS', 'ICP-MS'])"
+        },
+        "s_number_definition": {
+          "type": "string",
+          "description": "Definition of S-number used (mol O2 / mol metal dissolved)"
+        },
+        "stability_number_Sn": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Stability number (mol product / mol catalyst dissolved) - different from S-number"
+        },
+        "activity_stability_factor": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Activity-Stability Factor (ASF = activity × stability metric)"
+        },
+        "asf_definition": {
+          "type": "string",
+          "description": "Definition of ASF used (varies by author)"
+        },
+        "hfr_initial_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial high-frequency resistance (mΩ·cm²)"
+        },
+        "hfr_final_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final high-frequency resistance (mΩ·cm²)"
+        },
+        "hfr_increase_mOhm_cm2": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "HFR increase during test (mΩ·cm²)"
+        },
+        "hfr_increase_percent": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "HFR increase percentage"
+        },
+        "charge_transfer_resistance_initial_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial charge transfer resistance from EIS (mΩ·cm²)"
+        },
+        "charge_transfer_resistance_final_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final charge transfer resistance from EIS (mΩ·cm²)"
+        },
+        "mass_transport_resistance_initial_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial mass transport resistance from EIS (mΩ·cm²)"
+        },
+        "mass_transport_resistance_final_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final mass transport resistance from EIS (mΩ·cm²)"
+        },
+        "double_layer_capacitance_initial_mF_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial double layer capacitance (mF/cm²)"
+        },
+        "double_layer_capacitance_final_mF_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final double layer capacitance (mF/cm²)"
+        },
+        "hydrogen_crossover_initial_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial H2 crossover current density (mA/cm²)"
+        },
+        "hydrogen_crossover_final_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final H2 crossover current density (mA/cm²)"
+        },
+        "oxygen_crossover_initial_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial O2 crossover current density (mA/cm²)"
+        },
+        "oxygen_crossover_final_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final O2 crossover current density (mA/cm²)"
+        },
+        "membrane_resistance_initial_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial membrane/ionic resistance (mΩ·cm²)"
+        },
+        "membrane_resistance_final_mOhm_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final membrane/ionic resistance (mΩ·cm²)"
+        },
+        "exchange_current_density_initial_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial exchange current density (mA/cm²)"
+        },
+        "exchange_current_density_final_mA_cm2": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final exchange current density (mA/cm²)"
+        },
+        "polarization_curve_available": {
+          "type": "boolean",
+          "description": "Whether full polarization curve data is available"
+        },
+        "polarization_curve_initial": {
+          "type": "object",
+          "description": "Initial polarization curve data points",
+          "properties": {
+            "current_densities_mA_cm2": {
+              "type": "array",
+              "items": { "type": "number" }
+            },
+            "potentials_V": {
+              "type": "array",
+              "items": { "type": "number" }
+            }
+          }
+        },
+        "polarization_curve_final": {
+          "type": "object",
+          "description": "Final polarization curve data points",
+          "properties": {
+            "current_densities_mA_cm2": {
+              "type": "array",
+              "items": { "type": "number" }
+            },
+            "potentials_V": {
+              "type": "array",
+              "items": { "type": "number" }
+            }
+          }
+        },
+        "eis_nyquist_available": {
+          "type": "boolean",
+          "description": "Whether Nyquist plot data is available"
+        },
+        "eis_bode_available": {
+          "type": "boolean",
+          "description": "Whether Bode plot data is available"
+        },
+        "cv_fingerprint_change": {
+          "type": "string",
+          "enum": ["none", "minor", "moderate", "major", "unknown"],
+          "description": "Qualitative change in CV shape/features"
+        },
+        "cv_redox_peaks_shifted": {
+          "type": "boolean",
+          "description": "Whether CV redox peaks shifted position"
+        },
+        "cv_peak_shift_mV": {
+          "$ref": "#/$defs/NullableFloat",
+          "description": "CV peak position shift (mV)"
+        },
+        "cv_peak_current_retention_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "CV peak current retention (%)"
+        },
+        "product_gas_purity_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Product gas purity (e.g., O2 or H2) (%)"
+        },
+        "product_gas_purity_initial_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Initial product gas purity (%)"
+        },
+        "product_gas_purity_final_percent": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Final product gas purity (%)"
+        },
+        "n_replicates": {
+          "$ref": "#/$defs/NullablePositiveInt",
+          "description": "Number of replicate measurements for this observation"
+        },
+        "std_dev": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Standard deviation of replicate measurements"
+        },
+        "std_error": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "Standard error of the mean"
+        },
+        "confidence_interval_95_percent": {
+          "type": "object",
+          "properties": {
+            "lower": { "type": "number" },
+            "upper": { "type": "number" }
+          },
+          "description": "95% confidence interval"
+        },
+        "r_squared": {
+          "$ref": "#/$defs/NullablePositiveFloat",
+          "description": "R² value for fitted/extrapolated values"
+        },
+        "fit_method": {
+          "type": "string",
+          "description": "Method used for curve fitting/extrapolation"
+        },
+        "extrapolated": {
+          "type": "boolean",
+          "description": "Whether value was extrapolated (vs directly measured)"
+        },
+        "extrapolation_method": {
+          "type": "string",
+          "description": "Method used for extrapolation (e.g., 'linear', 'exponential decay')"
+        }
+      }
+    },
+
+    "HazardComponents": {
+      "type": "object",
+      "description": "Individual hazard factor components",
+      "properties": {
+        "H_temperature": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Arrhenius temperature acceleration factor"
+        },
+        "H_ph": {
+          "type": "number", 
+          "minimum": 0,
+          "description": "pH-driven dissolution acceleration"
+        },
+        "H_potential": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Potential-driven acceleration (with soft cap)"
+        },
+        "H_current": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current density acceleration factor"
+        },
+        "H_format": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Test format severity factor"
+        }
+      }
+    },
+
+    "Hazard": {
+      "type": "object",
+      "description": "Computed protocol severity (hazard) metrics",
+      "properties": {
+        "severity_index": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Calibrated severity index (DIMENSIONLESS, corpus-specific). Use this value."
+        },
+        "hazard_raw": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Pre-calibration raw hazard value"
+        },
+        "components": { "$ref": "#/$defs/HazardComponents" },
+        "uncertainty_factor": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Multiplicative uncertainty from missing fields"
+        },
+        "uncertainty_was_capped": {
+          "type": "boolean",
+          "description": "True if uncertainty was capped at 20× to prevent signal drowning"
+        },
+        "potential_was_soft_capped": {
+          "type": "boolean",
+          "description": "True if potential hazard hit the tanh soft cap"
+        }
+      }
+    },
+
+    "Completeness": {
+      "type": "object",
+      "description": "Protocol completeness metrics",
+      "properties": {
+        "physics_completeness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of physics fields present: [pH, T, E_high, j, format]. Excludes duration/cycles."
+        },
+        "reporting_completeness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Full completeness including exposure and loading fields"
+        },
+        "missing_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of missing field names"
+        }
+      }
+    },
+
+    "ExposureAdequacy": {
+      "type": "object",
+      "description": "Exposure adequacy scoring (separate from hazard)",
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Exposure adequacy score"
+        },
+        "tier": { 
+          "$ref": "#/$defs/ConfidenceTier",
+          "description": "A=reliable (>0.6), B=marginal (0.3-0.6), C=extrapolation-heavy (<0.3)"
+        },
+        "duration_component": {
+          "type": "number",
+          "description": "Contribution from test duration"
+        },
+        "cycle_component": {
+          "type": "number",
+          "description": "Contribution from cycle count"
+        },
+        "retention_penalty_applied": {
+          "type": "boolean",
+          "description": "True if penalized for >98% retention (minimal degradation)"
+        }
+      }
+    },
+
+    "Normalization": {
+      "type": "object",
+      "description": "Normalized durability results",
+      "properties": {
+        "tau_normalized": {
+          "type": "number",
+          "description": "Normalized durability: τ* = τ_obs × (H_obs / H_ref)"
+        },
+        "reference_hazard": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Reference hazard used for normalization"
+        },
+        "normalization_ratio": {
+          "type": "number",
+          "description": "H_observed / H_reference"
+        },
+        "was_clipped": {
+          "type": "boolean",
+          "description": "True if normalization ratio was clipped to bounds"
+        },
+        "clipping_bounds": {
+          "type": "object",
+          "properties": {
+            "log_min": { "type": "number" },
+            "log_max": { "type": "number" }
+          }
+        },
+        "confidence_tier": { "$ref": "#/$defs/ConfidenceTier" },
+        "recommendation": { "$ref": "#/$defs/Recommendation" }
+      }
+    },
+
+    "Provenance": {
+      "type": "object",
+      "description": "Source document and extraction provenance",
+      "properties": {
+        "doi": {
+          "type": "string",
+          "pattern": "^10\\..+/.+$",
+          "description": "Digital Object Identifier"
+        },
+        "pmid": {
+          "type": "string",
+          "description": "PubMed ID"
+        },
+        "arxiv_id": {
+          "type": "string",
+          "description": "arXiv identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Paper title"
+        },
+        "authors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "journal": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100
+        },
+        "volume": {
+          "type": "string"
+        },
+        "pages": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "extraction_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this record was extracted"
+        },
+        "extractor_version": {
+          "type": "string",
+          "description": "Version of extraction pipeline"
+        },
+        "extractor_model": {
+          "type": "string",
+          "description": "NLP model used for extraction (e.g., 'BatteryBERT-v4', 'GPT-4')"
+        },
+        "source_location": {
+          "type": "object",
+          "properties": {
+            "page": { "type": "integer" },
+            "section": { "type": "string" },
+            "table_id": { "type": "string" },
+            "figure_id": { "type": "string" },
+            "paragraph": { "type": "integer" },
+            "sentence": { "type": "integer" }
+          }
+        },
+        "from_supplementary": {
+          "type": "boolean",
+          "description": "Whether data came from supplementary information"
+        },
+        "supplementary_file": {
+          "type": "string",
+          "description": "Name of supplementary file if applicable"
+        },
+        "raw_data_available": {
+          "type": "boolean",
+          "description": "Whether raw data is deposited/available"
+        },
+        "raw_data_repository": {
+          "type": "string",
+          "description": "Repository where raw data is deposited (e.g., 'Zenodo', 'Figshare')"
+        },
+        "raw_data_doi": {
+          "type": "string",
+          "description": "DOI for deposited raw data"
+        },
+        "verification_status": {
+          "type": "string",
+          "enum": ["unverified", "auto_verified", "human_verified", "human_corrected", "disputed"],
+          "description": "Level of verification applied"
+        },
+        "verified_by": {
+          "type": "string",
+          "description": "Name/ID of person who verified"
+        },
+        "verification_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "verification_notes": {
+          "type": "string",
+          "description": "Notes from human verification/correction"
+        },
+        "conflicts_with": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of ECDL IDs this record conflicts with"
+        },
+        "supersedes": {
+          "type": "string",
+          "description": "ECDL ID of record this supersedes (for corrections)"
+        },
+        "corresponding_author": {
+          "type": "string",
+          "description": "Corresponding author name"
+        },
+        "corresponding_author_email": {
+          "type": "string",
+          "format": "email",
+          "description": "Corresponding author email"
+        },
+        "institution": {
+          "type": "string",
+          "description": "Primary institution/lab"
+        },
+        "funding_sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Funding agencies/grants"
+        },
+        "license": {
+          "type": "string",
+          "description": "License for the source data (e.g., 'CC BY 4.0')"
+        },
+        "peer_reviewed": {
+          "type": "boolean",
+          "description": "Whether the source is peer-reviewed"
+        },
+        "preprint": {
+          "type": "boolean",
+          "description": "Whether source is a preprint (not peer-reviewed)"
+        },
+        "preprint_server": {
+          "type": "string",
+          "enum": ["arXiv", "ChemRxiv", "ESSOAr", "ResearchSquare", "SSRN", "other"],
+          "description": "Preprint server if applicable"
+        },
+        "preprint_doi": {
+          "type": "string",
+          "description": "DOI of preprint version"
+        },
+        "published_version_doi": {
+          "type": "string",
+          "description": "DOI of published version (if preprint later published)"
+        },
+        "retracted": {
+          "type": "boolean",
+          "description": "Whether the paper has been retracted"
+        },
+        "retraction_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of retraction"
+        },
+        "retraction_doi": {
+          "type": "string",
+          "description": "DOI of retraction notice"
+        },
+        "retraction_reason": {
+          "type": "string",
+          "description": "Reason for retraction"
+        },
+        "has_errata": {
+          "type": "boolean",
+          "description": "Whether corrections/errata exist"
+        },
+        "errata_doi": {
+          "type": "string",
+          "description": "DOI of errata/correction"
+        },
+        "errata_affects_data": {
+          "type": "boolean",
+          "description": "Whether errata affects the extracted data"
+        },
+        "expression_of_concern": {
+          "type": "boolean",
+          "description": "Whether expression of concern has been issued"
+        },
+        "data_availability_statement": {
+          "type": "string",
+          "description": "Data availability statement from paper"
+        },
+        "code_availability": {
+          "type": "boolean",
+          "description": "Whether analysis code is available"
+        },
+        "code_repository": {
+          "type": "string",
+          "description": "Repository URL for analysis code"
+        },
+        "methods_supplementary_page": {
+          "type": "integer",
+          "description": "Page in supplementary where methods are detailed"
+        },
+        "conflict_of_interest": {
+          "type": "string",
+          "description": "Declared conflicts of interest"
+        }
+      }
+    },
+
+    "FieldProvenance": {
+      "type": "object",
+      "description": "Per-field extraction provenance",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "source": { "$ref": "#/$defs/ExtractionMethod" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source_span": { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "properties": {
+    "ecdl_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "ECDL schema version"
+    },
+    
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this record"
+    },
+
+    "material": { "$ref": "#/$defs/Material" },
+    
+    "protocol": { "$ref": "#/$defs/Protocol" },
+    
+    "observation": { "$ref": "#/$defs/Observation" },
+    
+    "hazard": { "$ref": "#/$defs/Hazard" },
+    
+    "completeness": { "$ref": "#/$defs/Completeness" },
+    
+    "exposure_adequacy": { "$ref": "#/$defs/ExposureAdequacy" },
+    
+    "normalization": { "$ref": "#/$defs/Normalization" },
+    
+    "provenance": { "$ref": "#/$defs/Provenance" },
+    
+    "field_provenance": { "$ref": "#/$defs/FieldProvenance" },
+    
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

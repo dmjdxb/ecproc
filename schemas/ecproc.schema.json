@@ -1,0 +1,412 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecproc.electrocatalystai.com/schema/v0.1.0/ecproc.json",
+  "title": "ecproc — Electrochemical Procedure Definition",
+  "description": "Schema for .ecproc YAML files defining electrochemical experimental procedures.",
+  "type": "object",
+  "required": ["metadata", "system", "procedure"],
+  "additionalProperties": false,
+
+  "$defs": {
+    "ValueWithUnit": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?\\s+[a-zA-Z/%°µ·]+(/[a-zA-Z]+)?$",
+      "description": "A numeric value followed by a unit, e.g. '50 mV/s', '1.2 V', '300 s'"
+    },
+    "PotentialRange": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?\\s+V\\s+and\\s+-?[0-9]+(\\.[0-9]+)?\\s+V$",
+      "description": "Potential range, e.g. '0.05 V and 1.2 V'"
+    },
+    "FrequencyRange": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?\\s+(Hz|kHz|MHz)\\s+to\\s+[0-9]+(\\.[0-9]+)?\\s+(Hz|kHz|MHz)$",
+      "description": "Frequency range for EIS, e.g. '100 kHz to 0.1 Hz'"
+    },
+    "ExtractSpec": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      ],
+      "description": "Data extraction: simple string or mapping of parameter names to extraction keys"
+    },
+    "TriggerSpec": {
+      "type": "object",
+      "properties": {
+        "every": {
+          "type": "string",
+          "description": "Periodic trigger, e.g. '5000 cycles' or '24 h'"
+        },
+        "when": {
+          "type": "string",
+          "description": "Conditional trigger expression"
+        },
+        "any": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TriggerSpec" },
+          "description": "Any of these triggers activates (OR logic)"
+        },
+        "all": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TriggerSpec" },
+          "description": "All triggers must fire (AND logic)"
+        }
+      }
+    },
+    "StepTechnique": {
+      "type": "object",
+      "description": "An electrochemical technique step. Exactly one technique key should be present.",
+      "properties": {
+        "cv": {
+          "type": "object",
+          "properties": {
+            "between": { "$ref": "#/$defs/PotentialRange" },
+            "rate": { "$ref": "#/$defs/ValueWithUnit" },
+            "cycles": { "type": "integer", "minimum": 1 },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" },
+            "vendor_flags": { "type": "object" }
+          },
+          "required": ["between", "rate", "cycles"]
+        },
+        "lsv": {
+          "type": "object",
+          "properties": {
+            "from": { "$ref": "#/$defs/ValueWithUnit" },
+            "to": { "$ref": "#/$defs/ValueWithUnit" },
+            "rate": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["from", "to", "rate"]
+        },
+        "eis": {
+          "type": "object",
+          "properties": {
+            "frequency": { "$ref": "#/$defs/FrequencyRange" },
+            "amplitude": { "$ref": "#/$defs/ValueWithUnit" },
+            "dc_bias": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" },
+            "vendor_flags": { "type": "object" }
+          },
+          "required": ["frequency", "amplitude"]
+        },
+        "ocp": {
+          "type": "object",
+          "properties": {
+            "for": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["for"]
+        },
+        "hold": {
+          "type": "object",
+          "properties": {
+            "at": { "$ref": "#/$defs/ValueWithUnit" },
+            "for": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["at", "for"]
+        },
+        "galvanostatic": {
+          "type": "object",
+          "properties": {
+            "current": { "$ref": "#/$defs/ValueWithUnit" },
+            "for": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["current", "for"]
+        },
+        "dpv": {
+          "type": "object",
+          "properties": {
+            "from": { "$ref": "#/$defs/ValueWithUnit" },
+            "to": { "$ref": "#/$defs/ValueWithUnit" },
+            "pulse_height": { "$ref": "#/$defs/ValueWithUnit" },
+            "pulse_width": { "$ref": "#/$defs/ValueWithUnit" },
+            "step": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["from", "to"]
+        },
+        "swv": {
+          "type": "object",
+          "properties": {
+            "from": { "$ref": "#/$defs/ValueWithUnit" },
+            "to": { "$ref": "#/$defs/ValueWithUnit" },
+            "frequency": { "$ref": "#/$defs/ValueWithUnit" },
+            "amplitude": { "$ref": "#/$defs/ValueWithUnit" },
+            "step": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["from", "to"]
+        },
+        "gcd": {
+          "type": "object",
+          "properties": {
+            "current": { "$ref": "#/$defs/ValueWithUnit" },
+            "between": { "$ref": "#/$defs/PotentialRange" },
+            "cycles": { "type": "integer", "minimum": 1 },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["current", "between", "cycles"]
+        },
+        "cc": {
+          "type": "object",
+          "properties": {
+            "current": { "$ref": "#/$defs/ValueWithUnit" },
+            "for": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["current", "for"]
+        },
+        "stripping": {
+          "type": "object",
+          "properties": {
+            "deposition_potential": { "$ref": "#/$defs/ValueWithUnit" },
+            "deposition_time": { "$ref": "#/$defs/ValueWithUnit" },
+            "from": { "$ref": "#/$defs/ValueWithUnit" },
+            "to": { "$ref": "#/$defs/ValueWithUnit" },
+            "rate": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" },
+            "extract": { "$ref": "#/$defs/ExtractSpec" }
+          },
+          "required": ["deposition_potential", "deposition_time", "from", "to", "rate"]
+        },
+        "purge": {
+          "type": "object",
+          "properties": {
+            "gas": { "type": "string" },
+            "for": { "$ref": "#/$defs/ValueWithUnit" },
+            "tag": { "type": "string" }
+          },
+          "required": ["gas", "for"]
+        },
+        "loop": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "oneOf": [
+                { "type": "integer", "minimum": 1 },
+                { "type": "string", "description": "Variable template, e.g. '{total_cycles}'" }
+              ]
+            },
+            "steps": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/StepTechnique" }
+            },
+            "stop_if": { "type": "string" },
+            "checkpoint": {
+              "type": "object",
+              "properties": {
+                "trigger": { "$ref": "#/$defs/TriggerSpec" },
+                "do": {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/StepTechnique" }
+                }
+              },
+              "required": ["trigger", "do"]
+            }
+          },
+          "required": ["count", "steps"]
+        }
+      }
+    },
+    "Phase": {
+      "type": "object",
+      "required": ["name", "steps"],
+      "properties": {
+        "name": { "type": "string", "description": "Phase name" },
+        "setup": {
+          "type": "object",
+          "properties": {
+            "gas": { "type": "string" },
+            "rotation": { "type": "number" }
+          },
+          "description": "Pre-phase setup actions"
+        },
+        "stabilize": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Stabilization criteria strings"
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/StepTechnique" },
+          "minItems": 1
+        },
+        "teardown": {
+          "type": "object",
+          "properties": {
+            "gas": { "type": "string" }
+          },
+          "description": "Post-phase teardown actions"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["protocol", "version"],
+      "properties": {
+        "protocol": { "type": "string", "description": "Protocol name" },
+        "version": { "type": "string", "description": "Protocol version" },
+        "author": { "type": "string" },
+        "electrolyte": { "type": "string" },
+        "gas": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "system": {
+      "type": "object",
+      "required": ["electrodes", "reference"],
+      "properties": {
+        "electrodes": {
+          "type": "integer",
+          "enum": [2, 3],
+          "description": "Number of electrodes (2 or 3)"
+        },
+        "reference": {
+          "type": "string",
+          "description": "Reference electrode type, e.g. 'RHE', 'Ag/AgCl'"
+        },
+        "working": {
+          "type": "object",
+          "properties": {
+            "material": { "type": "string" },
+            "area_cm2": { "type": "number", "exclusiveMinimum": 0 },
+            "loading_ug_cm2": { "type": "number", "minimum": 0 }
+          }
+        },
+        "electrolyte": {
+          "type": "object",
+          "properties": {
+            "solute": { "type": "string" },
+            "concentration_M": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "counter": { "type": "string", "description": "Counter electrode material" }
+      }
+    },
+    "procedure": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Phase" },
+      "minItems": 1,
+      "description": "Ordered list of experimental phases"
+    },
+    "safety": {
+      "type": "object",
+      "properties": {
+        "max_current": { "$ref": "#/$defs/ValueWithUnit" },
+        "voltage_window": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ValueWithUnit" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "temperature_limits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ValueWithUnit" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "stop_if": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "thermal_runaway": {
+          "type": "object",
+          "properties": {
+            "max_dT_dt": { "type": "number" },
+            "action": { "type": "string", "enum": ["emergency_stop", "cell_off", "alert"] }
+          },
+          "required": ["max_dT_dt", "action"]
+        },
+        "reference_electrode_monitor": {
+          "type": "object",
+          "properties": {
+            "max_Ru_change": { "type": "string" },
+            "max_ocp_drift": { "$ref": "#/$defs/ValueWithUnit" },
+            "action": { "type": "string", "enum": ["emergency_stop", "cell_off", "alert"] }
+          },
+          "required": ["action"]
+        }
+      }
+    },
+    "state_recovery": {
+      "type": "object",
+      "properties": {
+        "after_pause": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/StepTechnique" }
+            ]
+          }
+        },
+        "after_checkpoint": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/StepTechnique" }
+            ]
+          }
+        },
+        "after_error": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/StepTechnique" }
+            ]
+          }
+        }
+      },
+      "description": "Recovery procedures after interruptions"
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "ecdl": {
+          "type": "object",
+          "properties": {
+            "include_raw": { "type": "boolean" },
+            "compress": { "type": "string", "enum": ["gzip", "lz4", "none"] },
+            "signing": { "type": "string", "enum": ["sha256", "sha512", "none"] }
+          }
+        }
+      },
+      "description": "Output format configuration"
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "integer" }
+        ]
+      },
+      "description": "Variable templates for parameterized procedures"
+    }
+  }
+}

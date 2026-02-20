@@ -1,0 +1,57 @@
+site_name: ecproc
+site_description: Domain-specific language and toolchain for electrochemical procedures
+site_url: https://electrocatalystai.github.io/ecproc/
+repo_url: https://github.com/electrocatalystai/ecproc
+repo_name: electrocatalystai/ecproc
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/index.md
+  - Guide:
+      - Unit Conventions: guide/units.md
+  - Reference:
+      - API Overview: reference/index.md
+  - Protocols:
+      - Standard Protocols: protocols/index.md
+  - Contributing: contributing/index.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true

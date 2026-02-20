@@ -1,0 +1,14 @@
+{
+  "hardware_id": "palmsens4",
+  "manufacturer": "PalmSens",
+  "model": "PalmSens4",
+  "capabilities": {
+    "max_current_a": 0.01,
+    "min_current_a": 1e-9,
+    "max_potential_v": 5.0,
+    "min_potential_v": -5.0,
+    "eis": {"frequency_range_hz": [0.01, 1e6], "max_amplitude_v": 0.35},
+    "techniques": ["ocp", "cv", "lsv", "ca", "eis", "dpv", "swv"],
+    "features": ["ir_compensation"]
+  }
+}

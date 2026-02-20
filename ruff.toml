@@ -1,0 +1,18 @@
+line-length = 99
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH"]
+ignore = [
+    "N802",   # physics/electrochemistry naming conventions (E_A, T_REF, etc.)
+    "N803",   # same for arguments
+    "N806",   # same for local variables
+    "N815",   # same for class-scope variables (IRReferenceMonitor.max_Ru_change_factor)
+]
+
+[lint.isort]
+known-first-party = ["ecproc"]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["B017", "B905"]
+"src/ecproc/ir/schema.py" = ["TCH003"]  # datetime needed at runtime by Pydantic

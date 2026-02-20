@@ -1,0 +1,803 @@
+{
+  "$defs": {
+    "IRCheckpoint": {
+      "properties": {
+        "triggers": {
+          "items": {
+            "$ref": "#/$defs/IRTrigger"
+          },
+          "title": "Triggers",
+          "type": "array"
+        },
+        "logic": {
+          "default": "any",
+          "title": "Logic",
+          "type": "string"
+        },
+        "reset": {
+          "default": "independent",
+          "title": "Reset",
+          "type": "string"
+        },
+        "do": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/IRStep"
+              },
+              {
+                "$ref": "#/$defs/IRPhase"
+              }
+            ]
+          },
+          "title": "Do",
+          "type": "array"
+        }
+      },
+      "required": [
+        "triggers"
+      ],
+      "title": "IRCheckpoint",
+      "type": "object"
+    },
+    "IRElectrolyte": {
+      "properties": {
+        "solute": {
+          "title": "Solute",
+          "type": "string"
+        },
+        "concentration_mol_m3": {
+          "title": "Concentration Mol M3",
+          "type": "number"
+        },
+        "additional": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Additional"
+        }
+      },
+      "required": [
+        "solute",
+        "concentration_mol_m3"
+      ],
+      "title": "IRElectrolyte",
+      "type": "object"
+    },
+    "IRLoop": {
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Count"
+        },
+        "steps": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/IRStep"
+              },
+              {
+                "$ref": "#/$defs/IRLoop"
+              }
+            ]
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IRCheckpoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_if": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop If"
+        }
+      },
+      "required": [
+        "count",
+        "steps"
+      ],
+      "title": "IRLoop",
+      "type": "object"
+    },
+    "IRMetadata": {
+      "properties": {
+        "protocol": {
+          "title": "Protocol",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "created": {
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "ecproc_version": {
+          "title": "Ecproc Version",
+          "type": "string"
+        },
+        "source_hash": {
+          "title": "Source Hash",
+          "type": "string"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        }
+      },
+      "required": [
+        "protocol",
+        "version",
+        "created",
+        "ecproc_version",
+        "source_hash"
+      ],
+      "title": "IRMetadata",
+      "type": "object"
+    },
+    "IROutput": {
+      "properties": {
+        "ecdl": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ecdl"
+        }
+      },
+      "title": "IROutput",
+      "type": "object"
+    },
+    "IRPhase": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Setup"
+        },
+        "stabilize": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stabilize"
+        },
+        "steps": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/IRStep"
+              },
+              {
+                "$ref": "#/$defs/IRLoop"
+              }
+            ]
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "teardown": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Teardown"
+        }
+      },
+      "required": [
+        "name",
+        "steps"
+      ],
+      "title": "IRPhase",
+      "type": "object"
+    },
+    "IRProvenance": {
+      "properties": {
+        "source_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source File"
+        },
+        "source_hash": {
+          "title": "Source Hash",
+          "type": "string"
+        },
+        "parser_version": {
+          "title": "Parser Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_hash",
+        "parser_version"
+      ],
+      "title": "IRProvenance",
+      "type": "object"
+    },
+    "IRReferenceMonitor": {
+      "properties": {
+        "max_Ru_change_factor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Ru Change Factor"
+        },
+        "max_ocp_drift_V_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Ocp Drift V S"
+        },
+        "action": {
+          "default": "cell_off",
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "title": "IRReferenceMonitor",
+      "type": "object"
+    },
+    "IRSafety": {
+      "properties": {
+        "max_current_A": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Current A"
+        },
+        "voltage_window_V": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Voltage Window V"
+        },
+        "temperature_limits_C": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature Limits C"
+        },
+        "stop_conditions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Conditions"
+        },
+        "thermal_runaway": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IRThermalRunaway"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reference_electrode_monitor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IRReferenceMonitor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "IRSafety",
+      "type": "object"
+    },
+    "IRStateRecovery": {
+      "properties": {
+        "after_pause": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IRStep"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Pause"
+        },
+        "after_checkpoint": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IRStep"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Checkpoint"
+        },
+        "after_error": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/IRStep"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Error"
+        }
+      },
+      "title": "IRStateRecovery",
+      "type": "object"
+    },
+    "IRStep": {
+      "additionalProperties": true,
+      "description": "A single electrochemical step. Technique-specific fields via extra='allow'.",
+      "properties": {
+        "technique": {
+          "title": "Technique",
+          "type": "string"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tag"
+        },
+        "extract": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extract"
+        },
+        "vendor_flags": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vendor Flags"
+        }
+      },
+      "required": [
+        "technique"
+      ],
+      "title": "IRStep",
+      "type": "object"
+    },
+    "IRSystem": {
+      "properties": {
+        "electrodes": {
+          "title": "Electrodes",
+          "type": "integer"
+        },
+        "reference": {
+          "title": "Reference",
+          "type": "string"
+        },
+        "working": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IRWorkingElectrode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "electrolyte": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/IRElectrolyte"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Electrolyte"
+        },
+        "counter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Counter"
+        }
+      },
+      "required": [
+        "electrodes",
+        "reference"
+      ],
+      "title": "IRSystem",
+      "type": "object"
+    },
+    "IRThermalRunaway": {
+      "properties": {
+        "max_dT_dt_K_s": {
+          "title": "Max Dt Dt K S",
+          "type": "number"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_dT_dt_K_s",
+        "action"
+      ],
+      "title": "IRThermalRunaway",
+      "type": "object"
+    },
+    "IRTrigger": {
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "title": "IRTrigger",
+      "type": "object"
+    },
+    "IRVariables": {
+      "description": "Extracted variable values (e.g., Ru from EIS).",
+      "properties": {
+        "extractions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Extractions",
+          "type": "object"
+        }
+      },
+      "title": "IRVariables",
+      "type": "object"
+    },
+    "IRWorkingElectrode": {
+      "properties": {
+        "material": {
+          "title": "Material",
+          "type": "string"
+        },
+        "area_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Area M2"
+        },
+        "loading_kg_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Loading Kg M2"
+        },
+        "additional": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Additional"
+        }
+      },
+      "required": [
+        "material"
+      ],
+      "title": "IRWorkingElectrode",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "faraday_version": {
+      "default": "1.0",
+      "title": "Faraday Version",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/IRMetadata"
+    },
+    "system": {
+      "$ref": "#/$defs/IRSystem"
+    },
+    "procedure": {
+      "items": {
+        "$ref": "#/$defs/IRPhase"
+      },
+      "title": "Procedure",
+      "type": "array"
+    },
+    "safety": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IRSafety"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "state_recovery": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IRStateRecovery"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "variables": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IRVariables"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "output": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IROutput"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "provenance": {
+      "$ref": "#/$defs/IRProvenance"
+    }
+  },
+  "required": [
+    "metadata",
+    "system",
+    "procedure",
+    "provenance"
+  ],
+  "title": "FaradayIR",
+  "type": "object"
+}

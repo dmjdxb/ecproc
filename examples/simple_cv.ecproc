@@ -1,0 +1,15 @@
+metadata:
+  protocol: Simple CV
+  version: "1.0"
+
+system:
+  electrodes: 3
+  reference: RHE
+
+procedure:
+  - name: Conditioning
+    steps:
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 50 mV/s
+          cycles: 20

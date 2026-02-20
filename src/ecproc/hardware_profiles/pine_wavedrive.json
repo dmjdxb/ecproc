@@ -1,0 +1,15 @@
+{
+  "hardware_id": "pine_wavedrive",
+  "manufacturer": "Pine Research",
+  "model": "WaveDriver 200",
+  "capabilities": {
+    "max_current_a": 2.0,
+    "min_current_a": 1e-10,
+    "max_potential_v": 10.0,
+    "min_potential_v": -10.0,
+    "eis": {"frequency_range_hz": [0.01, 1e6], "max_amplitude_v": 0.5},
+    "techniques": ["ocp", "cv", "lsv", "ca", "cp", "eis", "dpv", "swv", "cc"],
+    "features": ["ir_compensation", "rotation_control"],
+    "rotation_rpm_max": 10000
+  }
+}

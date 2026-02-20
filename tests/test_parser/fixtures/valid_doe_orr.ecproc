@@ -1,0 +1,138 @@
+metadata:
+  protocol: DOE ORR Catalyst AST
+  version: "1.0"
+  author: DOE Fuel Cell Technologies Office
+  electrolyte: "0.1 M HClO4"
+  gas: O2/N2
+  working_electrode: Pt/C on GCE
+  reference: RHE
+  notes: DOE standard protocol for ORR catalyst accelerated stress testing
+
+system:
+  electrodes: 3
+  reference: RHE
+  working:
+    material: Pt/C
+    area_cm2: 0.196
+    loading_ug_cm2: 20.0
+  electrolyte:
+    solute: HClO4
+    concentration_M: 0.1
+  counter: Pt mesh
+
+procedure:
+  - name: Conditioning
+    setup:
+      gas: N2
+      rotation: 1600
+    steps:
+      - purge:
+          gas: N2
+          for: 30 min
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 500 mV/s
+          cycles: 50
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 50 mV/s
+          cycles: 3
+          tag: "conditioning_final"
+
+  - name: iR Compensation
+    steps:
+      - eis:
+          frequency: 100 kHz to 1 Hz
+          amplitude: 10 mV
+          dc_bias: 0.45 V
+          extract: Ru
+          tag: "ir_comp"
+
+  - name: Background
+    setup:
+      gas: N2
+    steps:
+      - purge:
+          gas: N2
+          for: 20 min
+      - cv:
+          between: 0.05 V and 1.05 V
+          rate: 20 mV/s
+          cycles: 3
+          tag: "background_cv"
+      - ocp:
+          for: 60 s
+
+  - name: ORR Activity
+    setup:
+      gas: O2
+      rotation: 1600
+    steps:
+      - purge:
+          gas: O2
+          for: 20 min
+      - ocp:
+          for: 300 s
+      - cv:
+          between: 0.05 V and 1.05 V
+          rate: 20 mV/s
+          cycles: 3
+          tag: "orr_cv"
+      - lsv:
+          from: 0.05 V
+          to: 1.05 V
+          rate: 20 mV/s
+          tag: "orr_lsv_anodic"
+      - lsv:
+          from: 1.05 V
+          to: 0.05 V
+          rate: 20 mV/s
+          tag: "orr_lsv_cathodic"
+
+  - name: Durability
+    setup:
+      gas: N2
+      rotation: 0
+    steps:
+      - purge:
+          gas: N2
+          for: 10 min
+      - loop:
+          count: 30000
+          steps:
+            - cv:
+                between: 0.6 V and 1.0 V
+                rate: 50 mV/s
+                cycles: 1
+          checkpoint:
+            trigger:
+              any:
+                - every: 5000 cycles
+            do:
+              - eis:
+                  frequency: 100 kHz to 1 Hz
+                  amplitude: 10 mV
+                  dc_bias: 0.45 V
+                  extract: Ru
+              - cv:
+                  between: 0.05 V and 1.05 V
+                  rate: 20 mV/s
+                  cycles: 3
+                  tag: "durability_cv"
+              - lsv:
+                  from: 1.05 V
+                  to: 0.05 V
+                  rate: 20 mV/s
+                  tag: "durability_lsv"
+
+safety:
+  max_current: "100 mA"
+  voltage_window:
+    - "-0.2 V"
+    - "1.5 V"
+  temperature_limits:
+    - "20 C"
+    - "30 C"
+  stop_if:
+    - "current > 200 mA"
+    - "ECSA_loss > 50%"

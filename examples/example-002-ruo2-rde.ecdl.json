@@ -1,0 +1,158 @@
+{
+  "ecdl_version": "1.0.0",
+  "id": "ecdl-example-002-ruo2-rde",
+
+  "material": {
+    "formula_raw": "RuO2",
+    "formula_canonical": "RuO2",
+    "composition": {
+      "Ru": 0.333,
+      "O": 0.667
+    },
+    "oxidation_state": "Ru(IV)",
+    "phase": "rutile",
+    "morphology": "nanoparticle",
+    "crystallinity": "crystalline",
+    "synthesis_method": "hydrothermal",
+    "calcination_temp_C": 400,
+    "calcination_duration_hours": 4,
+    "calcination_atmosphere": "air",
+    "particle_size_nm": 8.0,
+    "bet_surface_area_m2_g": 60.0,
+    "supplier": "Sigma-Aldrich",
+    "purity_percent": 99.5
+  },
+
+  "protocol": {
+    "electrolyte": {
+      "type": "HClO4",
+      "concentration_M": 0.1,
+      "concentration_unit": "M"
+    },
+    "ph": 1.0,
+    "regime": "acidic",
+    "temperature_C": 25,
+    "potential": {
+      "high_V": 1.5,
+      "low_V": 1.0,
+      "reference": "RHE",
+      "scan_rate_mV_s": 50
+    },
+    "current_density_mA_cm2": 5,
+    "control_mode": "potentiodynamic",
+    "waveform": "triangle_cv",
+    "ir_compensation": true,
+    "ir_compensation_percent": 80,
+    "test_format": "RDE",
+    "rotation_rpm": 1600,
+    "duration_hours": 100,
+    "cycle_count": 5000,
+    "loading_mg_cm2": 0.1,
+    "geometric_area_cm2": 0.196,
+    "working_electrode_substrate": "GC",
+    "counter_electrode": "Pt mesh",
+    "reference_electrode_type": "RHE",
+    "cell_configuration": "three_electrode",
+    "gas_atmosphere": "O2",
+    "gas_saturation": true,
+    "purge_gas": "O2",
+    "purge_duration_min": 20,
+    "ocv_stabilization_criteria": "<1mV/min for 10 min",
+    "conditioning_cycles": 50,
+    "conditioning_scan_rate_mV_s": 100,
+    "potentiostat_manufacturer": "Gamry",
+    "potentiostat_model": "Reference 3000"
+  },
+
+  "observation": {
+    "metric_type": "s_number",
+    "value": 5.0e5,
+    "unit": "mol_O2/mol_Ru",
+    "ecsa_initial_m2_g": 60.0,
+    "ecsa_final_m2_g": 42.0,
+    "ecsa_retention_percent": 70.0,
+    "overpotential_initial_mV": 280,
+    "overpotential_final_mV": 350,
+    "overpotential_increase_mV": 70,
+    "overpotential_reference_current_mA_cm2": 10,
+    "total_dissolved_mass_ug_cm2": 8.5,
+    "metal_loading_loss_percent": 15.0,
+    "dissolution_rate_ng_cm2_s": 0.024,
+    "faradaic_efficiency_percent": 98.0,
+    "charge_passed_C_cm2": 1800,
+    "tafel_slope_initial_mV_dec": 55,
+    "tafel_slope_final_mV_dec": 68,
+    "tafel_slope_change_mV_dec": 13,
+    "s_number_definition": "mol O2 evolved / mol Ru dissolved",
+    "particle_size_initial_nm": 8.0,
+    "particle_size_final_nm": 12.0,
+    "particle_growth_factor": 1.5,
+    "post_mortem_techniques": ["TEM", "XPS", "ICP-OES"]
+  },
+
+  "hazard": {
+    "severity_index": 0.7071,
+    "hazard_raw": 0.7071,
+    "components": {
+      "H_temperature": 1.0,
+      "H_ph": 1.0,
+      "H_potential": 1.0,
+      "H_current": 0.7071,
+      "H_format": 1.0
+    },
+    "uncertainty_factor": 1.0,
+    "uncertainty_was_capped": false,
+    "potential_was_soft_capped": false
+  },
+
+  "completeness": {
+    "physics_completeness": 1.0,
+    "reporting_completeness": 0.92,
+    "missing_fields": []
+  },
+
+  "exposure_adequacy": {
+    "score": 0.75,
+    "tier": "A",
+    "duration_component": 0.7,
+    "cycle_component": 0.8,
+    "retention_penalty_applied": false
+  },
+
+  "normalization": {
+    "tau_normalized": 353553.39,
+    "reference_hazard": 1.0,
+    "normalization_ratio": 0.7071,
+    "was_clipped": false,
+    "confidence_tier": "A",
+    "recommendation": "include"
+  },
+
+  "provenance": {
+    "doi": "10.1000/example-ruo2-rde-002",
+    "title": "RuO2 Nanoparticles for Acidic OER: Activity-Stability Trade-off",
+    "authors": ["K. Brown", "L. Davis", "P. Miller"],
+    "journal": "Electrochemistry Communications",
+    "year": 2023,
+    "volume": "45",
+    "pages": "567-578",
+    "extraction_date": "2024-06-15T11:00:00Z",
+    "extractor_version": "ecproc-1.0.0",
+    "extractor_model": "BatteryBERT-v4",
+    "source_location": {
+      "page": 8,
+      "section": "Results and Discussion",
+      "table_id": "Table 1"
+    },
+    "from_supplementary": false,
+    "verification_status": "auto_verified",
+    "institution": "Example University"
+  },
+
+  "metadata": {
+    "created_at": "2024-06-15T11:00:00Z",
+    "updated_at": "2024-06-15T11:00:00Z",
+    "tags": ["RuO2", "RDE", "OER", "acidic", "durability", "dissolution"],
+    "notes": "Example ECDL document for RuO2 RDE OER durability test - demonstrates lower stability than IrO2"
+  }
+}

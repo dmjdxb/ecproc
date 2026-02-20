@@ -1,0 +1,151 @@
+metadata:
+  protocol: OER Durability Protocol
+  version: "1.0"
+  author: ElectrocatalystAI
+  electrolyte: "0.5 M H2SO4"
+  working_electrode: IrO2
+  notes: >
+    OER durability protocol for testing catalyst stability under
+    oxygen evolution conditions. Chronopotentiometric hold at
+    10 mA/cm2 with periodic EIS and CV checkpoints to track
+    activity loss and impedance changes over 500 hours.
+
+system:
+  electrodes: 3
+  reference: RHE
+  working:
+    material: IrO2
+    area_cm2: 0.196
+    loading_ug_cm2: 50.0
+  electrolyte:
+    solute: H2SO4
+    concentration_M: 0.5
+  counter: Pt mesh
+
+safety:
+  max_current: "50 mA"
+  voltage_window:
+    - "0.0 V"
+    - "2.0 V"
+  temperature_limits:
+    - "20 C"
+    - "90 C"
+  stop_if:
+    - "potential > 2.5 V"
+    - "temperature > 95 C"
+
+procedure:
+  - name: Conditioning
+    setup:
+      gas: N2
+    steps:
+      - cv:
+          between: 0.05 V and 1.4 V
+          rate: 100 mV/s
+          cycles: 20
+          tag: conditioning_cv
+      - cv:
+          between: 0.05 V and 1.4 V
+          rate: 50 mV/s
+          cycles: 3
+          tag: conditioning_stable
+
+  - name: Baseline Characterisation
+    steps:
+      - ocp:
+          for: 300 s
+          tag: ocp_baseline
+      - eis:
+          frequency: 100 kHz to 0.1 Hz
+          amplitude: 10 mV
+          dc_bias: OCP
+          tag: eis_baseline
+          extract:
+            Ru: high_frequency_intercept
+            Rct: semicircle_diameter
+      - lsv:
+          from: 1.2 V
+          to: 1.8 V
+          rate: 5 mV/s
+          tag: oer_polarisation_baseline
+
+  - name: OER Durability Hold
+    setup:
+      gas: N2
+    steps:
+      - loop:
+          count: 500
+          steps:
+            - galvanostatic:
+                current: 10 mA/cm2
+                for: 1 h
+                tag: galvanostatic_hold
+          checkpoint:
+            trigger:
+              any:
+                - every: 24 h
+            do:
+              - ocp:
+                  for: 60 s
+              - eis:
+                  frequency: 100 kHz to 0.1 Hz
+                  amplitude: 10 mV
+                  dc_bias: OCP
+                  tag: checkpoint_eis
+                  extract:
+                    Ru: high_frequency_intercept
+                    Rct: semicircle_diameter
+              - cv:
+                  between: 0.05 V and 1.4 V
+                  rate: 50 mV/s
+                  cycles: 3
+                  tag: checkpoint_cv
+              - lsv:
+                  from: 1.2 V
+                  to: 1.8 V
+                  rate: 5 mV/s
+                  tag: checkpoint_oer_polarisation
+          stop_if: "potential > 2.2 V"
+
+  - name: Post-Durability Characterisation
+    steps:
+      - ocp:
+          for: 300 s
+          tag: ocp_post
+      - eis:
+          frequency: 100 kHz to 0.1 Hz
+          amplitude: 10 mV
+          dc_bias: OCP
+          tag: eis_post
+          extract:
+            Ru: high_frequency_intercept
+            Rct: semicircle_diameter
+      - lsv:
+          from: 1.2 V
+          to: 1.8 V
+          rate: 5 mV/s
+          tag: oer_polarisation_post
+      - cv:
+          between: 0.05 V and 1.4 V
+          rate: 50 mV/s
+          cycles: 3
+          tag: final_cv
+
+state_recovery:
+  after_pause:
+    - ocp:
+        for: 120 s
+    - eis:
+        frequency: 100 kHz to 0.1 Hz
+        amplitude: 10 mV
+        dc_bias: OCP
+  after_error:
+    - "log_error"
+    - ocp:
+        for: 30 s
+
+output:
+  ecdl:
+    include_raw: true
+    compress: gzip
+    signing: sha256

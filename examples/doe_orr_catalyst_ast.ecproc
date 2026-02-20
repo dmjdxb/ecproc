@@ -1,0 +1,155 @@
+metadata:
+  protocol: DOE ORR Catalyst Activity/Stability Test
+  version: "1.0"
+  author: DOE Fuel Cell Consortium
+  electrolyte: "0.1 M HClO4"
+  gas: O2
+  working_electrode: Pt/C
+  notes: >
+    Standard DOE ORR catalyst accelerated stress test protocol.
+    Combines activity measurement via RDE with potential-cycling
+    durability test per DOE/FCTT guidelines.
+
+system:
+  electrodes: 3
+  reference: RHE
+  working:
+    material: Pt/C
+    area_cm2: 0.196
+    loading_ug_cm2: 20.0
+  electrolyte:
+    solute: HClO4
+    concentration_M: 0.1
+  counter: Pt mesh
+
+safety:
+  max_current: "100 mA"
+  voltage_window:
+    - "-0.05 V"
+    - "1.5 V"
+  temperature_limits:
+    - "15 C"
+    - "40 C"
+  stop_if:
+    - "current > 200 mA"
+    - "temperature > 45 C"
+
+procedure:
+  - name: Conditioning
+    setup:
+      gas: N2
+      rotation: 1600
+    steps:
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 500 mV/s
+          cycles: 50
+          tag: conditioning_cv
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 50 mV/s
+          cycles: 3
+          tag: conditioning_final
+
+  - name: iR Compensation
+    steps:
+      - ocp:
+          for: 300 s
+          tag: ocp_stabilization
+      - eis:
+          frequency: 100 kHz to 0.1 Hz
+          amplitude: 10 mV
+          dc_bias: 0 V
+          tag: eis_ir
+          extract: Ru
+          vendor_flags:
+            biologic:
+              bandwidth: 5
+              drift_correction: true
+            gamry:
+              ac_settling: 3
+
+  - name: Background
+    setup:
+      gas: N2
+      rotation: 1600
+    steps:
+      - lsv:
+          from: 1.0 V
+          to: 0.2 V
+          rate: 20 mV/s
+          tag: background_n2
+      - lsv:
+          from: 1.0 V
+          to: 0.2 V
+          rate: 5 mV/s
+          tag: background_slow
+
+  - name: ORR Activity
+    setup:
+      gas: O2
+      rotation: 1600
+    stabilize:
+      - "OCP stable within 5 mV for 60 s"
+    steps:
+      - lsv:
+          from: 1.0 V
+          to: 0.2 V
+          rate: 20 mV/s
+          tag: orr_20mVs
+      - lsv:
+          from: 1.0 V
+          to: 0.2 V
+          rate: 5 mV/s
+          tag: orr_5mVs
+
+  - name: Durability AST
+    setup:
+      gas: N2
+      rotation: 0
+    steps:
+      - loop:
+          count: 30000
+          steps:
+            - cv:
+                between: 0.6 V and 1.0 V
+                rate: 50 mV/s
+                cycles: 1
+          checkpoint:
+            trigger:
+              any:
+                - every: 5000 cycles
+            do:
+              - eis:
+                  frequency: 100 kHz to 0.1 Hz
+                  amplitude: 10 mV
+                  dc_bias: 0 V
+                  extract: Ru
+                  tag: checkpoint_eis
+              - cv:
+                  between: 0.05 V and 1.2 V
+                  rate: 50 mV/s
+                  cycles: 3
+                  tag: checkpoint_cv
+
+state_recovery:
+  after_pause:
+    - ocp:
+        for: 60 s
+  after_checkpoint:
+    - ocp:
+        for: 30 s
+    - eis:
+        frequency: 100 kHz to 0.1 Hz
+        amplitude: 10 mV
+        dc_bias: 0 V
+  after_error:
+    - "log_error"
+    - ocp:
+        for: 10 s
+
+output:
+  ecdl:
+    include_raw: true
+    compress: gzip
+    signing: sha256

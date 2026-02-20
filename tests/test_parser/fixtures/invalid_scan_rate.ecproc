@@ -1,0 +1,16 @@
+# CV scan rate exceeds 10 V/s limit (PV001)
+metadata:
+  protocol: High Scan Rate Test
+  version: "1.0"
+
+system:
+  electrodes: 3
+  reference: RHE
+
+procedure:
+  - name: Bad Scan Rate
+    steps:
+      - cv:
+          between: 0.05 V and 1.2 V
+          rate: 20000 mV/s
+          cycles: 5

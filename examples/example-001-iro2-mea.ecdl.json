@@ -1,0 +1,149 @@
+{
+  "ecdl_version": "1.0.0",
+  "id": "ecdl-example-001-iro2-mea",
+
+  "material": {
+    "formula_raw": "IrO2",
+    "formula_canonical": "IrO2",
+    "composition": {
+      "Ir": 0.333,
+      "O": 0.667
+    },
+    "oxidation_state": "Ir(IV)",
+    "phase": "rutile",
+    "morphology": "nanoparticle",
+    "crystallinity": "crystalline",
+    "synthesis_method": "Adams fusion",
+    "calcination_temp_C": 500,
+    "calcination_duration_hours": 2,
+    "calcination_atmosphere": "air",
+    "particle_size_nm": 5.0,
+    "bet_surface_area_m2_g": 45.0,
+    "supplier": "Alfa Aesar",
+    "purity_percent": 99.9
+  },
+
+  "protocol": {
+    "electrolyte": {
+      "type": "H2SO4",
+      "concentration_M": 0.5,
+      "concentration_unit": "M"
+    },
+    "ph": 0.3,
+    "regime": "acidic",
+    "temperature_C": 80,
+    "potential": {
+      "high_V": 1.6,
+      "low_V": 1.2,
+      "reference": "RHE",
+      "scan_rate_mV_s": 500
+    },
+    "current_density_mA_cm2": 10,
+    "control_mode": "potentiodynamic",
+    "waveform": "square_wave",
+    "ir_compensation": true,
+    "ir_compensation_percent": 85,
+    "test_format": "MEA",
+    "duration_hours": 1000,
+    "cycle_count": 10000,
+    "loading_mg_cm2": 1.0,
+    "geometric_area_cm2": 5.0,
+    "cell_configuration": "two_electrode",
+    "gas_atmosphere": "N2",
+    "gas_saturation": true,
+    "active_area_cm2": 5.0,
+    "catalyst_coated_membrane": true,
+    "gdl_type": "Sigracet 29BC",
+    "bipolar_plate_material": "Ti",
+    "flow_field_type": "serpentine"
+  },
+
+  "observation": {
+    "metric_type": "s_number",
+    "value": 1.5e7,
+    "unit": "mol_O2/mol_Ir",
+    "ecsa_initial_m2_g": 45.0,
+    "ecsa_final_m2_g": 38.0,
+    "ecsa_retention_percent": 84.4,
+    "overpotential_initial_mV": 250,
+    "overpotential_final_mV": 285,
+    "overpotential_increase_mV": 35,
+    "overpotential_reference_current_mA_cm2": 10,
+    "total_dissolved_mass_ug_cm2": 0.12,
+    "metal_loading_loss_percent": 0.8,
+    "faradaic_efficiency_percent": 99.5,
+    "charge_passed_C_cm2": 36000,
+    "cell_voltage_initial_V": 1.55,
+    "cell_voltage_final_V": 1.60,
+    "cell_voltage_increase_mV": 50,
+    "degradation_rate_uV_h": 50,
+    "s_number_definition": "mol O2 evolved / mol Ir dissolved",
+    "post_mortem_techniques": ["TEM", "XPS", "ICP-MS"]
+  },
+
+  "hazard": {
+    "severity_index": 481.48,
+    "hazard_raw": 481.48,
+    "components": {
+      "H_temperature": 23.1371,
+      "H_ph": 2.2387,
+      "H_potential": 3.7209,
+      "H_current": 1.0,
+      "H_format": 2.5
+    },
+    "uncertainty_factor": 1.0,
+    "uncertainty_was_capped": false,
+    "potential_was_soft_capped": false
+  },
+
+  "completeness": {
+    "physics_completeness": 1.0,
+    "reporting_completeness": 0.85,
+    "missing_fields": []
+  },
+
+  "exposure_adequacy": {
+    "score": 0.9,
+    "tier": "A",
+    "duration_component": 0.95,
+    "cycle_component": 0.85,
+    "retention_penalty_applied": false
+  },
+
+  "normalization": {
+    "tau_normalized": 7222200000.0,
+    "reference_hazard": 1.0,
+    "normalization_ratio": 481.48,
+    "was_clipped": false,
+    "confidence_tier": "A",
+    "recommendation": "include"
+  },
+
+  "provenance": {
+    "doi": "10.1000/example-iro2-mea-001",
+    "title": "High-Performance IrO2 Catalyst for PEM Water Electrolysis",
+    "authors": ["J. Smith", "A. Johnson", "M. Williams"],
+    "journal": "Journal of Electrochemical Science",
+    "year": 2024,
+    "volume": "15",
+    "pages": "1234-1245",
+    "extraction_date": "2024-06-15T10:30:00Z",
+    "extractor_version": "ecproc-1.0.0",
+    "extractor_model": "BatteryBERT-v4",
+    "source_location": {
+      "page": 5,
+      "section": "Results",
+      "table_id": "Table 2"
+    },
+    "from_supplementary": false,
+    "verification_status": "auto_verified",
+    "institution": "Example Research Institute"
+  },
+
+  "metadata": {
+    "created_at": "2024-06-15T10:30:00Z",
+    "updated_at": "2024-06-15T10:30:00Z",
+    "tags": ["IrO2", "MEA", "OER", "PEM electrolysis", "durability"],
+    "notes": "Example ECDL document for IrO2 MEA OER durability test"
+  }
+}

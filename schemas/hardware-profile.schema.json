@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hardware Profile",
+  "type": "object",
+  "required": ["hardware_id", "manufacturer", "model", "capabilities"],
+  "properties": {
+    "hardware_id": {"type": "string"},
+    "manufacturer": {"type": "string"},
+    "model": {"type": "string"},
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "max_current_a": {"type": "number"},
+        "min_current_a": {"type": "number"},
+        "max_potential_v": {"type": "number"},
+        "min_potential_v": {"type": "number"},
+        "eis": {
+          "type": "object",
+          "properties": {
+            "frequency_range_hz": {"type": "array", "items": {"type": "number"}},
+            "max_amplitude_v": {"type": "number"}
+          }
+        },
+        "techniques": {"type": "array", "items": {"type": "string"}},
+        "features": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
